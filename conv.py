@@ -3,6 +3,7 @@ import requests
 import datetime
 from bs4 import BeautifulSoup
 import sqlite3
+import tempfile
 
 nepse_url = "http://www.nepalstock.com/todaysprice/export"
 
@@ -35,23 +36,3 @@ print(output_rows)
 with open(dump_file_name + '.csv', 'w') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerows(output_rows)
-
-
-
-"""
-file = open("./companies.csv","r")
-data = file.read().split("\n")
-data.remove('')
-
-splited_data = []
-
-sector=[]
-
-for i in data:
-    splited_data += [i.split(",")]
-
-for i in splited_data:
-    if(i[2] not in sector):
-        sector += [i[2]]
-
-print(sector)"""
