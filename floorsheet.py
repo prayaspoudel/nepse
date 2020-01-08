@@ -3,32 +3,35 @@ import tempfile
 from bs4 import BeautifulSoup
 import csv
 import datetime
+import schedule
+import time
 
-todays_data_link = "http://www.nepalstock.com/floorsheet?_limit=50000"
+def mainFunction():
+    floor_sheet_link = "http://www.nepalstock.com/floorsheet?_limit=50000"
 
-company_get_request = requests.get(todays_data_link)
+    floor_sheet_request = requests.get(floor_sheet_link)
 
-companyListSoup = company_get_request.content
+    beautifulSoup = BeautifulSoup(floor_sheet_request.content, features="lxml")
+    dataTable = beautifulSoup.find("table")
 
-#temp = tempfile.TemporaryFile()
+    output_rows =[]
+    for table_row in dataTable.findAll('tr')[2:-3]:
+        columns = table_row.findAll('td')
+        output_row = []
+        for column in columns:
+            output_row.append(column.text.replace("\n",'').strip())
+        output_rows += [output_row]
+    try:
+        output_rows.remove([])
+    except:
+        pass
 
-beautifulSoup = BeautifulSoup(company_get_request.content, features="lxml")
-dataTable = beautifulSoup.find("table")
+    with open(str(datetime.datetime.now())[:10].replace('-','')+'_floorsheet.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(output_rows)
 
-output_rows =[]
-i = 0
-for table_row in dataTable.findAll('tr')[2:-3]:
-    columns = table_row.findAll('td')
-    output_row = []
-    for column in columns:
-        output_row.append(column.text.encode('utf-8').replace("\n",'').strip())
-    output_rows += [output_row]
-try:
-    output_rows.remove([])
-except:
-    pass
-#print(output_rows)
+schedule.every().day.at("07:25").do(mainFunction)
 
-with open(str(datetime.datetime.now())[:10].replace('-','')+'_floorsheet.csv', 'w') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerows(output_rows)
+while True:
+    schedule.run_pending()
+    time.sleep(1)
